@@ -23,20 +23,39 @@ HEADERS = {
     "Referer": "https://www.nseindia.com/companies-listing/corporate-filings-announcements",
 }
 
+MNA_KEYWORDS = [
+    "merger", "amalgamation", "acquisition", "acquire", "takeover",
+    "scheme of arrangement", "slump sale", "demerger", "open offer",
+]
+
+
+def is_mna(text):
+    t = (text or "").lower()
+    return any(kw in t for kw in MNA_KEYWORDS)
+
+
+def announcement_msg(x):
+    subject = x.get("desc") or x.get("subject", "N/A")
+    details = x.get("attchmntText") or ""
+    tag = is_mna(subject) or is_mna(details)
+    label = "\U0001F3E2 M&A / Merger Update" if tag else "\U0001F4E2 Corporate Announcement"
+    return (
+        f"<b>{label}</b>\n"
+        f"<b>{x.get('sm_name') or x.get('symbol')}</b> ({x.get('symbol')})\n"
+        f"Subject: {subject}\n"
+        f"Details: {details[:300]}\n"
+        f"Date: {x.get('an_dt')}\n"
+        f"Doc: {x.get('attchmntFile') or 'https://www.nseindia.com/companies-listing/corporate-filings-announcements'}"
+    )
+
+
 # endpoint -> (label, id_fn, msg_fn)
 ENDPOINTS = {
     "corporate-announcements": {
         "url": f"{BASE}/api/corporate-announcements?index=equities",
         "label": "\U0001F4E2 Corporate Announcement",
         "id_fn": lambda x: f"{x.get('symbol')}|{x.get('desc')}|{x.get('an_dt')}",
-        "msg_fn": lambda x: (
-            f"<b>\U0001F4E2 Corporate Announcement</b>\n"
-            f"<b>{x.get('sm_name') or x.get('symbol')}</b> ({x.get('symbol')})\n"
-            f"Subject: {x.get('desc') or x.get('subject','N/A')}\n"
-            f"Details: {(x.get('attchmntText') or 'N/A')[:300]}\n"
-            f"Date: {x.get('an_dt')}\n"
-            f"Doc: {x.get('attchmntFile') or 'https://www.nseindia.com/companies-listing/corporate-filings-announcements'}"
-        ),
+        "msg_fn": announcement_msg,
     },
     "corporate-actions": {
         "url": f"{BASE}/api/corporates-corporateActions?index=equities",
@@ -88,6 +107,34 @@ ENDPOINTS = {
             f"Qty: {x.get('BD_QTY_TRD')}   Price: {x.get('BD_TP_WATP')}\n"
             f"Date: {x.get('BD_DT_DATE')}\n"
             f"Doc: https://www.nseindia.com/report-detail/display-bulk-and-block-deals"
+        ),
+    },
+    "insider-trading": {
+        "url": f"{BASE}/api/corporates-pit?index=equities",
+        "label": "\U0001F575\uFE0F Insider Trading",
+        "id_fn": lambda x: f"{x.get('symbol')}|{x.get('name') or x.get('acqName')}|{x.get('date') or x.get('intimDt')}|{x.get('secAcq')}",
+        "msg_fn": lambda x: (
+            f"<b>\U0001F575\uFE0F Insider Trading Disclosure (PIT)</b>\n"
+            f"<b>{x.get('company') or x.get('symbol')}</b> ({x.get('symbol')})\n"
+            f"Insider: {x.get('name') or x.get('acqName') or 'N/A'}   Category: {x.get('personCategory','N/A')}\n"
+            f"Type: {x.get('secAcq','N/A')}   Value: {x.get('secVal','N/A')}\n"
+            f"Shares before: {x.get('befAcqSharesNo','N/A')} -> after: {x.get('afAcqSharesNo','N/A')}\n"
+            f"Date: {x.get('date') or x.get('intimDt','N/A')}\n"
+            f"Doc: https://www.nseindia.com/companies-listing/corporate-filings-insider-trading"
+        ),
+    },
+    "sast": {
+        "url": f"{BASE}/api/corporates-sast?index=equities",
+        "label": "\U0001F4CB SAST Disclosure",
+        "id_fn": lambda x: f"{x.get('symbol')}|{x.get('acqName') or x.get('name')}|{x.get('date') or x.get('recdDt')}",
+        "msg_fn": lambda x: (
+            f"<b>\U0001F4CB SAST Disclosure (Substantial Acquisition/Takeover)</b>\n"
+            f"<b>{x.get('company') or x.get('symbol')}</b> ({x.get('symbol')})\n"
+            f"Acquirer: {x.get('acqName') or x.get('name') or 'N/A'}\n"
+            f"Before %: {x.get('befAcqSharesPer','N/A')}   After %: {x.get('afterAcqSharesPer','N/A')}\n"
+            f"Trigger: {x.get('regulation') or x.get('remark','N/A')}\n"
+            f"Date: {x.get('date') or x.get('recdDt','N/A')}\n"
+            f"Doc: https://www.nseindia.com/companies-listing/corporate-filings-insider-trading"
         ),
     },
 }
