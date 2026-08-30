@@ -42,8 +42,8 @@ ENDPOINTS = {
     "board-meetings": {
         "url": f"{BASE}/api/corporate-board-meetings?index=equities",
         "label": "Board Meeting",
-        "id_fn": lambda x: f"{x.get('symbol')}|{x.get('bm_purpose')}|{x.get('bm_date')}",
-        "title_fn": lambda x: f"{x.get('symbol')}: {x.get('bm_purpose')} on {x.get('bm_date')}",
+        "id_fn": lambda x: f"{x.get('bm_symbol')}|{x.get('bm_purpose')}|{x.get('bm_date')}|{x.get('bm_desc')}",
+        "title_fn": lambda x: f"{x.get('bm_symbol')}: {x.get('bm_purpose')} on {x.get('bm_date')}",
         "link": "https://www.nseindia.com/companies-listing/corporate-filings-board-meetings",
     },
     "bulk-deals": {
@@ -125,11 +125,14 @@ def main():
                 iid = cfg["id_fn"](item)
             except Exception:
                 continue
+            if iid in current_ids:
+                continue  # dupe within same fetch, skip
             current_ids.append(iid)
             if iid not in seen_ids:
                 title = cfg["title_fn"](item)
                 msg = f"<b>{cfg['label']}</b>\n{title}\n{cfg['link']}"
                 send_telegram(msg)
+                seen_ids.add(iid)  # mark sent NOW, not after loop
                 new_count += 1
                 time.sleep(0.5)  # avoid telegram rate limit
 
