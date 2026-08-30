@@ -23,42 +23,72 @@ HEADERS = {
     "Referer": "https://www.nseindia.com/companies-listing/corporate-filings-announcements",
 }
 
-# endpoint -> (label, id_field, title_builder, link_template)
+# endpoint -> (label, id_fn, msg_fn)
 ENDPOINTS = {
     "corporate-announcements": {
         "url": f"{BASE}/api/corporate-announcements?index=equities",
-        "label": "Corporate Announcement/Filing",
+        "label": "\U0001F4E2 Corporate Announcement",
         "id_fn": lambda x: f"{x.get('symbol')}|{x.get('desc')}|{x.get('an_dt')}",
-        "title_fn": lambda x: f"{x.get('symbol')}: {x.get('desc') or x.get('subject','')}",
-        "link": "https://www.nseindia.com/companies-listing/corporate-filings-announcements",
+        "msg_fn": lambda x: (
+            f"<b>\U0001F4E2 Corporate Announcement</b>\n"
+            f"<b>{x.get('sm_name') or x.get('symbol')}</b> ({x.get('symbol')})\n"
+            f"Subject: {x.get('desc') or x.get('subject','N/A')}\n"
+            f"Details: {(x.get('attchmntText') or 'N/A')[:300]}\n"
+            f"Date: {x.get('an_dt')}\n"
+            f"Doc: {x.get('attchmntFile') or 'https://www.nseindia.com/companies-listing/corporate-filings-announcements'}"
+        ),
     },
     "corporate-actions": {
         "url": f"{BASE}/api/corporates-corporateActions?index=equities",
-        "label": "Corporate Action",
+        "label": "\u2699\uFE0F Corporate Action",
         "id_fn": lambda x: f"{x.get('symbol')}|{x.get('subject')}|{x.get('exDate')}",
-        "title_fn": lambda x: f"{x.get('symbol')}: {x.get('subject')} (ex-date {x.get('exDate')})",
-        "link": "https://www.nseindia.com/companies-listing/corporate-filings-actions",
+        "msg_fn": lambda x: (
+            f"<b>\u2699\uFE0F Corporate Action</b>\n"
+            f"<b>{x.get('comp') or x.get('symbol')}</b> ({x.get('symbol')})\n"
+            f"Action: {x.get('subject')}\n"
+            f"Series: {x.get('series','N/A')}   Face Value: {x.get('faceVal','N/A')}\n"
+            f"Ex-Date: {x.get('exDate','N/A')}   Record Date: {x.get('recDate','N/A')}\n"
+            f"Doc: https://www.nseindia.com/companies-listing/corporate-filings-actions"
+        ),
     },
     "board-meetings": {
         "url": f"{BASE}/api/corporate-board-meetings?index=equities",
-        "label": "Board Meeting",
+        "label": "\U0001F4C5 Board Meeting",
         "id_fn": lambda x: f"{x.get('bm_symbol')}|{x.get('bm_purpose')}|{x.get('bm_date')}|{x.get('bm_desc')}",
-        "title_fn": lambda x: f"{x.get('bm_symbol')}: {x.get('bm_purpose')} on {x.get('bm_date')}",
-        "link": "https://www.nseindia.com/companies-listing/corporate-filings-board-meetings",
+        "msg_fn": lambda x: (
+            f"<b>\U0001F4C5 Board Meeting</b>\n"
+            f"<b>{x.get('sm_name') or x.get('bm_symbol')}</b> ({x.get('bm_symbol')})\n"
+            f"Purpose: {x.get('bm_purpose')}\n"
+            f"Details: {(x.get('bm_desc') or 'N/A')[:300]}\n"
+            f"Meeting Date: {x.get('bm_date')}\n"
+            f"Doc: {x.get('attachment') or 'https://www.nseindia.com/companies-listing/corporate-filings-board-meetings'}"
+        ),
     },
     "bulk-deals": {
         "url": f"{BASE}/api/historicalOR/bulk-deals",
-        "label": "Bulk Deal",
+        "label": "\U0001F4CA Bulk Deal",
         "id_fn": lambda x: f"{x.get('BD_SYMBOL')}|{x.get('BD_CLIENT_NAME')}|{x.get('BD_DT_DATE')}|{x.get('BD_QTY_TRD')}",
-        "title_fn": lambda x: f"{x.get('BD_SYMBOL')}: {x.get('BD_CLIENT_NAME')} {x.get('BD_BUY_SELL')} {x.get('BD_QTY_TRD')} @ {x.get('BD_TP_WATP')}",
-        "link": "https://www.nseindia.com/report-detail/display-bulk-and-block-deals",
+        "msg_fn": lambda x: (
+            f"<b>\U0001F4CA Bulk Deal</b>\n"
+            f"Symbol: <b>{x.get('BD_SYMBOL')}</b>\n"
+            f"Client: {x.get('BD_CLIENT_NAME')}\n"
+            f"Side: {x.get('BD_BUY_SELL')}   Qty: {x.get('BD_QTY_TRD')}   Price: {x.get('BD_TP_WATP')}\n"
+            f"Date: {x.get('BD_DT_DATE')}\n"
+            f"Doc: https://www.nseindia.com/report-detail/display-bulk-and-block-deals"
+        ),
     },
     "block-deals": {
         "url": f"{BASE}/api/historicalOR/block-deals",
-        "label": "Block Deal",
+        "label": "\U0001F4CA Block Deal",
         "id_fn": lambda x: f"{x.get('BD_SYMBOL')}|{x.get('BD_CLIENT_NAME')}|{x.get('BD_DT_DATE')}|{x.get('BD_QTY_TRD')}",
-        "title_fn": lambda x: f"{x.get('BD_SYMBOL')}: {x.get('BD_CLIENT_NAME')} {x.get('BD_QTY_TRD')} @ {x.get('BD_TP_WATP')}",
-        "link": "https://www.nseindia.com/report-detail/display-bulk-and-block-deals",
+        "msg_fn": lambda x: (
+            f"<b>\U0001F4CA Block Deal</b>\n"
+            f"Symbol: <b>{x.get('BD_SYMBOL')}</b>\n"
+            f"Client: {x.get('BD_CLIENT_NAME')}\n"
+            f"Qty: {x.get('BD_QTY_TRD')}   Price: {x.get('BD_TP_WATP')}\n"
+            f"Date: {x.get('BD_DT_DATE')}\n"
+            f"Doc: https://www.nseindia.com/report-detail/display-bulk-and-block-deals"
+        ),
     },
 }
 
@@ -129,8 +159,7 @@ def main():
                 continue  # dupe within same fetch, skip
             current_ids.append(iid)
             if iid not in seen_ids:
-                title = cfg["title_fn"](item)
-                msg = f"<b>{cfg['label']}</b>\n{title}\n{cfg['link']}"
+                msg = cfg["msg_fn"](item)
                 send_telegram(msg)
                 seen_ids.add(iid)  # mark sent NOW, not after loop
                 new_count += 1
