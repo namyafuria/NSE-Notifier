@@ -1,0 +1,32 @@
+name: NSE Poll
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"   # every 30 min, UTC
+  workflow_dispatch: {}       # lets you trigger manually from Actions tab
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install -r requirements.txt
+
+      - name: Run poller
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python nse_bot.py
+
+      - name: Commit updated state
+        run: |
+          git config user.name "nse-bot"
+          git config user.email "nse-bot@users.noreply.github.com"
+          git add state.json
+          git diff --staged --quiet || git commit -m "update state [skip ci]"
+          git push
